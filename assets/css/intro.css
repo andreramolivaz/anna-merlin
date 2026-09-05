@@ -1,14 +1,23 @@
 /* =========================================================
    the signature that writes itself
 
-   This used to be a page of its own. It now sits on top of the home
-   page instead, so it plays on every load and every reload rather than
-   only when someone happens to arrive by the front door.
+   It sits on top of the home page rather than on a page of its own, so it
+   plays on every load and every reload.
 
-   The pen and eraser strokes below are white and black on purpose: they
-   live inside a luminance mask, where white reveals and black hides. Those
-   are not visible colours and must not be themed — the only colour that
-   shows is --intro-ink, on the glyph.
+   How the writing is done, and why it is done this way. The mark is her
+   real outline — tapered, thin through the joins and full in the loops —
+   cut into its two words. Each word is covered by a curtain the colour of
+   the ground, and the curtain slides right to uncover it.
+
+   It began as an svg mask, with a pen stroke whose dash offset moved every
+   frame. That is the most faithful method and the most expensive one: a
+   mask makes the browser rebuild an offscreen buffer and recomposite on
+   every tick, and iPhones could not hold the frame rate. Stroking the
+   centreline instead was cheap but wrong — a single stroke width thickens
+   exactly the parts of her hand that should be light, and it read as bold.
+
+   A curtain costs nothing: it moves by transform, which every compositor
+   handles on its own, and the letterforms are untouched.
    ========================================================= */
 
 :root { --intro-ink: #FFFFFF; }
@@ -39,17 +48,36 @@ html.intro-up, html.intro-up body { overflow: hidden; }
 
 /* the signature is deliberately small, and centred */
 .signature {
-  display: block;
+  display: flex;
   width: clamp(215px, 27vw, 310px);
+}
+
+/* Each word clips its own curtain. Without this the curtain that has
+   finished uncovering "anna" would slide across and cover "merlin". */
+.word {
+  position: relative;
+  overflow: hidden;
+  line-height: 0;
+}
+
+.word svg {
+  display: block;
+  width: 100%;
   height: auto;
-  overflow: visible;
-  shape-rendering: geometricPrecision;
+  fill: var(--intro-ink);
+}
+
+.curtain {
+  position: absolute;
+  inset: -2px 0;
+  background: var(--brown);
+  transform: translateX(0);
+  will-change: transform;
 }
 
 /* No blur on the way out: an animated filter is repainted on the main
-   thread every frame, and on Safari that is the one place a clean fade
-   turns into a stutter. Opacity and transform are enough, and both are
-   handed to the compositor. */
+   thread every frame, and on Safari that is where a clean fade turns into
+   a stutter. Opacity and transform are enough, and both are composited. */
 .intro.is-leaving {
   opacity: 0;
   transform: scale(.985);
@@ -58,64 +86,10 @@ html.intro-up, html.intro-up body { overflow: hidden; }
 
 .intro.is-gone { display: none; }
 
-/* The mark itself: a vector path, no raster, no external asset.
-
-   I once replaced this with the centreline stroked directly, to spare the
-   browser the mask. It is cheaper, and it is wrong: her hand tapers — thin
-   through the joins, full in the loops — and a stroke of one width thickens
-   exactly the parts that should be light. At the same quantity of ink it
-   reads heavier. The faithful version is back. */
-.glyph { fill: var(--intro-ink); }
-
-/*
-  The strokes below are not the visible mark. They are the movement of the
-  pen, taken from the real centreline of the signature and used as a mask —
-  so the mark keeps the exact shape of the original while its appearance
-  follows one continuous piece of writing, letter after letter.
-
-  The gap in the dash pattern is twice the dash on purpose. With a gap the
-  same length as the path, the far end lands exactly where the next dash
-  begins: a dash of zero length, which a round linecap still draws as a dot.
-  That is what once left specks hanging in mid-air ahead of the pen.
-*/
-.pen {
-  fill: none;
-  stroke: #fff;
-  stroke-width: 14;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 1200 2400;
-  stroke-dashoffset: 1200;
-}
-
-/*
-  Erasing does not rewind the white strokes: an identical black stroke passes
-  over them, walked from the tail back to the start. Where the pen crosses
-  itself — the loops, the l, the r — nothing is left glowing, because the
-  black covers for good.
-*/
-.eraser {
-  fill: none;
-  stroke: #000;
-  stroke-width: 17;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-dasharray: 1200 2400;
-  stroke-dashoffset: 1200;
-}
-
-.lift {
-  fill: #fff;
-  opacity: 0;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
 @media (max-width: 600px) {
   .signature { width: min(58vw, 240px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pen { stroke-dashoffset: 0; }
-  .lift { opacity: 1; }
+  .curtain { transform: translateX(101%); }
 }

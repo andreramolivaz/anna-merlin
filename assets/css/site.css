@@ -138,12 +138,6 @@ a { color: inherit; text-decoration: none; }
 .nav-item:hover .hand,
 .nav-item:focus-visible .hand,
 .nav-item[aria-current="page"] .hand { clip-path: inset(-40% -4% -40% 0); }
-/* Al tocco non esiste il passaggio del mouse: il tap accende comunque
-   :hover, e il ritaglio animato sul testo è lento su Safari mobile.
-   Sul telefono la grafia compare e basta, senza scriversi. */
-@media (hover: none) {
-  .hand { transition: none; will-change: auto; }
-}
 
 @media (prefers-reduced-motion: reduce) {
   .hand { transition-duration: 1ms; }

@@ -1,128 +1,79 @@
 /* The signature that writes itself, then steps aside.
-   Paths and timings unchanged from the original intro page. */
+
+   Every word is uncovered by a curtain that slides right. The only thing
+   animated is a transform, so the whole sequence runs on the compositor —
+   nothing here asks the main thread to redraw a mask or re-measure a path
+   on each frame. */
 
 (() => {
-  /* ---- timings ------------------------------------------------- */
+  /* ---- timings ------------------------------------------------------- */
   const CONFIG = {
-    writeSpeed: 700,   /* viewBox units per second, writing   */
-    eraseSpeed: 1500,  /* the same, erasing                   */
-    penLift: [90, 70], /* real pauses: word space, lift for n */
-    holdMs: 560,       /* whole signature on screen           */
-    fadeMs: 520        /* fade through to the field           */
+    writeSpeed: 295,   /* viewBox units per second, writing */
+    eraseSpeed: 640,   /* the same, rubbing out             */
+    penLift:    90,    /* the pause between the two words   */
+    holdMs:     560,   /* whole signature on screen         */
+    fadeMs:     520    /* fade through to the field         */
   };
-  /* -------------------------------------------------------------- */
+  /* -------------------------------------------------------------------- */
 
   const intro = document.getElementById("intro");
-  const reducedMotion = window.matchMedia(
-    "(prefers-reduced-motion: reduce)"
-  ).matches;
+  const curtains = [...document.querySelectorAll(".word")].map((word) => ({
+    el: word.querySelector(".curtain"),
+    span: Number(word.dataset.span) || 250     /* how far the pen travels */
+  }));
+
+  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   let started = false;
   let leaving = false;
 
-  const penPaths = [
-    document.querySelector(".pen-anna"),
-    document.querySelector(".pen-merli"),
-    document.querySelector(".pen-n")
-  ];
+  const OFF = "translateX(101%)";              /* clear of the word */
+  const ON = "translateX(0)";                  /* covering it       */
 
-  const erasers = [
-    document.querySelector(".eraser-n"),
-    document.querySelector(".eraser-merli"),
-    document.querySelector(".eraser-anna")
-  ];
-
-  const iDot = document.querySelector(".i-dot");
-  const finalDot = document.querySelector(".final-dot");
-
-  function dot(element, delay, show) {
-    const from = show ? ".35" : "1";
-    const to = show ? "1" : ".3";
-    element.animate([
-      { opacity: show ? 0 : 1, transform: `scale(${from})` },
-      { opacity: show ? 1 : 0, transform: `scale(${to})` }
-    ], {
-      duration: show ? 150 : 120,
-      delay,
-      easing: show ? "cubic-bezier(.22, 1, .36, 1)" : "ease-in",
-      fill: "forwards"
-    });
+  function slide(curtain, from, to, duration, delay) {
+    curtain.animate(
+      [{ transform: from }, { transform: to }],
+      { duration, delay, easing: "linear", fill: "forwards" }
+    );
   }
 
-  function runHandwriting() {
-    const strokes = penPaths.map((path) => {
-      const length = path.getTotalLength();
-      /* gap twice the dash: see the note in intro.css. An equal gap puts
-         the end of the path on a dash boundary, and the round linecap
-         draws that zero-length dash as a visible dot. */
-      path.style.strokeDasharray = length + " " + length * 2;
-      path.style.strokeDashoffset = length;
-      return { path, length };
+  function run() {
+    let t = 120;
+
+    /* writing: each curtain clears its own word, with a lift between them */
+    curtains.forEach(({ el, span }, i) => {
+      const duration = (span / CONFIG.writeSpeed) * 1000;
+      slide(el, ON, OFF, duration, t);
+      t += duration + (i < curtains.length - 1 ? CONFIG.penLift : 0);
     });
 
-    /* One speed along every centreline: the pen does not slow down or
-         restart between letters, so the gesture stays continuous even
-         where the path closes on itself. */
-    let cursor = 120;
+    /* The pen is down. The field can start fetching now: the hold, the
+       rubbing out and the fade cover the wait, and none of it competes
+       with the writing itself. */
+    window.setTimeout(
+      () => document.dispatchEvent(new Event("intro:written")), t);
 
-    strokes.forEach(({ path, length }, index) => {
-      const duration = (length / CONFIG.writeSpeed) * 1000;
+    t += CONFIG.holdMs;
 
-      path.animate([
-        { strokeDashoffset: length },
-        { strokeDashoffset: 0 }
-      ], { duration, delay: cursor, easing: "linear", fill: "forwards" });
-
-      cursor += duration + (CONFIG.penLift[index] || 0);
-    });
-
-    /* The last letter is down. The field can start fetching now: the hold,
-       the erasing and the fade cover the wait, and none of it competes with
-       the writing itself. */
-    window.setTimeout(() => document.dispatchEvent(new Event("intro:written")),
-                      cursor);
-
-    /* The dot of the i and the full stop: the only real pen lifts. */
-    const iDotIn = cursor + 30;
-    const finalDotIn = iDotIn + 130;
-    dot(iDot, iDotIn, true);
-    dot(finalDot, finalDotIn, true);
-
-    let t = finalDotIn + 150 + CONFIG.holdMs;
-    dot(finalDot, t, false);
-    dot(iDot, t + 60, false);
-    t += 190;
-
-    /* Rewound in true reverse order: n, merli, anna. The white strokes stay
-       where they are; what moves is a black eraser tracing back over them
-       from the tail, so nothing is left glowing. */
-    erasers.forEach((path) => {
-      const length = path.getTotalLength();
-      path.style.strokeDasharray = length + " " + length * 2;
-      path.style.strokeDashoffset = length;
-
-      const duration = Math.max(160, (length / CONFIG.eraseSpeed) * 1000);
-
-      path.animate([
-        { strokeDashoffset: length },
-        { strokeDashoffset: 0 }
-      ], { duration, delay: t, easing: "linear", fill: "forwards" });
-
+    /* rubbing out, in true reverse order: the curtain comes back from the
+       right, so the writing retreats from its tail towards its start */
+    curtains.slice().reverse().forEach(({ el, span }) => {
+      const duration = (span / CONFIG.eraseSpeed) * 1000;
+      slide(el, OFF, ON, duration, t);
       t += duration + 40;
     });
 
     return t;
   }
 
-  /* The intro no longer sends you anywhere: the field is already
-     underneath it, so it just gets out of the way. */
+  /* The intro does not send you anywhere: the field is already underneath
+     it, so it simply gets out of the way. */
   function leave(delay = CONFIG.fadeMs) {
     if (leaving) return;
     leaving = true;
-    /* skipped by a tap: the field should not sit there waiting for a cue
-       that is now three seconds away. The listener only fires once. */
+    /* skipped by a tap: the field should not sit waiting for a cue that is
+       now three seconds away. The listener only fires once. */
     document.dispatchEvent(new Event("intro:written"));
-    /* the field starts moving as the ground fades, not after it */
     document.documentElement.classList.remove("intro-up");
     intro.classList.add("is-leaving");
     window.setTimeout(() => intro.classList.add("is-gone"), delay);
@@ -133,19 +84,13 @@
     started = true;
 
     if (reducedMotion) {
+      curtains.forEach(({ el }) => { el.style.transform = OFF; });
       document.dispatchEvent(new Event("intro:written"));
-      penPaths.forEach((path) => {
-        path.style.strokeDasharray = "none";
-        path.style.strokeDashoffset = 0;
-      });
-      iDot.style.opacity = 1;
-      finalDot.style.opacity = 1;
       window.setTimeout(leave, 900);
       return;
     }
 
-    const finishAt = runHandwriting();
-    window.setTimeout(leave, finishAt + 60);
+    window.setTimeout(leave, run() + 60);
   }
 
   function boot() {
@@ -154,26 +99,17 @@
       document.addEventListener("visibilitychange", boot, { once: true });
       return;
     }
-
-    /* No waiting for anything. The writing is a main-thread animation —
-       every frame redraws a mask — so what it needs is an idle page, and it
-       has one: the field holds its images back until the pen is down. */
     window.setTimeout(start, 200);
   }
 
-  if (document.readyState === "loading") {
-    window.addEventListener("DOMContentLoaded", boot, { once: true });
-  } else {
-    boot();
-  }
-
-  /* Click or tap skips it. */
-  intro.addEventListener("click", () => leave(420));
-
+  /* Click, tap or key: skip it. */
+  intro.addEventListener("click", () => leave(320));
   intro.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
+    if (event.key === "Enter" || event.key === " " || event.key === "Escape") {
       event.preventDefault();
-      leave(420);
+      leave(320);
     }
   });
-    })();
+
+  boot();
+})();
