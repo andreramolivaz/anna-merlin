@@ -123,12 +123,23 @@ sheet — the model photographs, mostly. Those, and every drawing, need that
 sheet to fall away so the work sits on the paper rather than in a white box.
 
 That used to be `mix-blend-mode: multiply`, done by the browser on every
-frame. It is now baked into the files. Multiplying against a flat backdrop is
-exactly a per-channel scale by backdrop/255, so the result is identical and
-the compositor has nothing to do. `assets/bake-paper.py` is what does it —
-run it from the site root after adding a plate marked `ground: "white"`, or
-after changing `--paper`. **It is not idempotent: baking twice darkens
-twice.**
+frame. It is baked into the files instead, so the compositor has nothing to
+do. `assets/bake-paper.py` does it — run it from the site root after adding a
+plate marked `ground: "white"`, or after changing `--paper`.
+
+A flat multiply is not enough, and this is worth knowing before you touch it.
+The sheets these were shot and scanned on are not pure white: they run from
+about 244 to 255, and they are not neutral either. Multiplying all of them by
+the same figure leaves each one a few levels off the page, which is exactly
+the faint box it was meant to remove. So each file is measured and mapped —
+its own sheet is sent to exactly `--paper`, and the tone on either side is
+stretched to follow, so nothing clips.
+
+The sheet is read as the commonest pale tone in the whole picture, not from
+the border. On several of the drawings the border carries contour lines
+rather than paper, and a border reading brightens them until the drawing
+washes out. The script is idempotent, with one level of slack for jpeg
+rounding.
 
 A render or a dark photograph has a ground of its own and must not carry the
 flag, or the page would eat into the picture itself. If you add a plate, look
