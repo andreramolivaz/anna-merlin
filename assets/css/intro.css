@@ -1,23 +1,13 @@
 /* =========================================================
    the signature that writes itself
 
-   It sits on top of the home page rather than on a page of its own, so it
-   plays on every load and every reload.
+   This used to be a page of its own. It now sits on top of the home
+   page instead, so it plays on every load and every reload rather than
+   only when someone happens to arrive by the front door.
 
-   How the writing is done, and why it is done this way. The mark is her
-   real outline — tapered, thin through the joins and full in the loops —
-   cut into its two words. Each word is covered by a curtain the colour of
-   the ground, and the curtain slides right to uncover it.
-
-   It began as an svg mask, with a pen stroke whose dash offset moved every
-   frame. That is the most faithful method and the most expensive one: a
-   mask makes the browser rebuild an offscreen buffer and recomposite on
-   every tick, and iPhones could not hold the frame rate. Stroking the
-   centreline instead was cheap but wrong — a single stroke width thickens
-   exactly the parts of her hand that should be light, and it read as bold.
-
-   A curtain costs nothing: it moves by transform, which every compositor
-   handles on its own, and the letterforms are untouched.
+   It is drawn as a stroked centreline rather than a filled outline behind
+   a mask. The hand is monoline, so the letterforms come out the same, and
+   the browser is spared rebuilding a mask buffer every frame.
    ========================================================= */
 
 :root { --intro-ink: #FFFFFF; }
@@ -48,36 +38,18 @@ html.intro-up, html.intro-up body { overflow: hidden; }
 
 /* the signature is deliberately small, and centred */
 .signature {
-  display: flex;
-  width: clamp(215px, 27vw, 310px);
-}
-
-/* Each word clips its own curtain. Without this the curtain that has
-   finished uncovering "anna" would slide across and cover "merlin". */
-.word {
-  position: relative;
-  overflow: hidden;
-  line-height: 0;
-}
-
-.word svg {
   display: block;
-  width: 100%;
+  width: clamp(215px, 27vw, 310px);
   height: auto;
-  fill: var(--intro-ink);
-}
-
-.curtain {
-  position: absolute;
-  inset: -2px 0;
-  background: var(--brown);
-  transform: translateX(0);
-  will-change: transform;
+  overflow: visible;
+  /* geometricPrecision here turns off the renderer's own shortcuts for the
+     sake of a fidelity nobody can see on a stroked line this thin */
 }
 
 /* No blur on the way out: an animated filter is repainted on the main
-   thread every frame, and on Safari that is where a clean fade turns into
-   a stutter. Opacity and transform are enough, and both are composited. */
+   thread every frame, and on Safari that is the one place a clean fade
+   turns into a stutter. Opacity and transform are enough, and both are
+   handed to the compositor. */
 .intro.is-leaving {
   opacity: 0;
   transform: scale(.985);
@@ -86,10 +58,37 @@ html.intro-up, html.intro-up body { overflow: hidden; }
 
 .intro.is-gone { display: none; }
 
+/* The signature itself: the centreline of the real hand, stroked. Six units
+   is the thickness measured off the original filled mark — its area over the
+   length of its centreline — so the weight matches.
+
+   The gap in the dash pattern is twice the dash on purpose. With a gap the
+   same length as the path, the far end lands exactly where the next dash
+   begins: a dash of zero length, which a round linecap still draws as a dot.
+   That is what once left specks hanging in mid-air ahead of the pen. */
+.pen {
+  fill: none;
+  stroke: var(--intro-ink);
+  stroke-width: 6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1200 2400;
+  stroke-dashoffset: 1200;
+}
+
+/* the dot of the i and the full stop */
+.lift {
+  fill: var(--intro-ink);
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 @media (max-width: 600px) {
   .signature { width: min(58vw, 240px); }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .curtain { transform: translateX(101%); }
+  .pen { stroke-dashoffset: 0; }
+  .lift { opacity: 1; }
 }

@@ -91,14 +91,7 @@
   }
 
   function build() {
-    /* Every plate is a composited layer that the phone has to hold in
-       graphics memory while the field drifts. Eighteen of them on a laptop
-       is nothing; on a phone it is enough for Safari to start discarding
-       and reloading the tab. A narrow screen shows two thirds of them —
-       fewer than fit on screen at once anyway, so nothing is lost. */
-    const data = window.innerWidth < 760
-      ? window.PLATES.slice(0, 12)
-      : window.PLATES;
+    const data = window.PLATES;
     const n    = data.length;
     const shape = (window.innerWidth * TUNE.tile[0]) /
                   (window.innerHeight * TUNE.tile[1]);
