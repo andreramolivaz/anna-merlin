@@ -111,8 +111,6 @@
       el.className = "plate";
       el.type = "button";
       el.dataset.kind = item.kind;
-      /* anything standing on a white sheet gets folded into the page */
-      if (item.kind === "draw" || item.ground === "white") el.dataset.blend = "1";
       
       /* Any extra copy is the same plate seen elsewhere on the plane, so it
          stays silent for keyboard and screen readers: the portfolio is
@@ -185,6 +183,14 @@
   }
 
   function frame() {
+    /* Nothing moves while the signature is writing. Eighteen transformed
+       elements per frame is real work, and on the main thread it is the
+       same work the animation needs. */
+    if (document.documentElement.classList.contains("intro-up")) {
+      requestAnimationFrame(frame);
+      return;
+    }
+
     if (!s.dragging) {
       if (s.pointerIn) {
         /* pointer toward an edge pulls the field the other way */
@@ -327,8 +333,6 @@
     /* the same courtesy in full view: never shown wider than it really is */
     lensImg.style.maxWidth = Math.min(p.item.w, 1200) + "px";
     lensImg.dataset.kind = p.item.kind;
-    lensImg.toggleAttribute("data-blend",
-      p.item.kind === "draw" || p.item.ground === "white");
     lensCap.innerHTML = caption(p.item);
     lens.classList.add("is-open");
     lens.setAttribute("aria-hidden", "false");
@@ -388,10 +392,20 @@
     settle = setTimeout(layout, 180);
   });
 
-  /* hold until the plates have actually arrived */
+  /* Hold until the plates have actually arrived, then say so out loud: the
+     signature listens for this and waits, so it writes on a quiet page
+     rather than against eighteen images still being fetched and decoded. */
   const imgs = [...stage.querySelectorAll("img")];
   let left = imgs.length;
-  const ready = () => stage.classList.add("is-ready");
+  let announced = false;
+
+  function ready() {
+    if (announced) return;
+    announced = true;
+    stage.classList.add("is-ready");
+    document.dispatchEvent(new Event("plates:ready"));
+  }
+
   if (!left) ready();
   imgs.forEach((img) => {
     const tick = () => { if (--left <= 0) ready(); };
@@ -401,5 +415,7 @@
       img.addEventListener("error", tick, { once: true });
     }
   });
-  setTimeout(ready, 3500);
+
+  /* a slow connection must not hold the signature hostage */
+  setTimeout(ready, 6000);
 })();

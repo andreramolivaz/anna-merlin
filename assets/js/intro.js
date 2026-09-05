@@ -113,8 +113,9 @@
   function leave(delay = CONFIG.fadeMs) {
     if (leaving) return;
     leaving = true;
-    intro.classList.add("is-leaving");
+    /* the field starts moving as the ground fades, not after it */
     document.documentElement.classList.remove("intro-up");
+    intro.classList.add("is-leaving");
     window.setTimeout(() => intro.classList.add("is-gone"), delay);
   }
 
@@ -143,6 +144,19 @@
       document.addEventListener("visibilitychange", boot, { once: true });
       return;
     }
+
+    /* The writing is a main-thread animation: every frame redraws a mask.
+       Started while the plates are still being fetched and decoded it
+       stutters, and Safari suffers far more than Chrome. So it waits for
+       the field to report itself ready, and only then picks up the pen.
+       The gallery caps that wait, so a slow connection cannot stall it. */
+    if (window.PLATES && !document.body.classList.contains("plates-ready")) {
+      document.addEventListener("plates:ready", () => {
+        window.setTimeout(start, 260);
+      }, { once: true });
+      return;
+    }
+
     window.setTimeout(start, 200);
   }
 

@@ -27,6 +27,25 @@ when someone arrived by the front door — reload the gallery and you never
 saw it. It now sits on top of the home page as an overlay, so it plays on
 every load and every reload. Click or tap skips it.
 
+It waits for the plates before it starts. The writing is a main-thread
+animation — every frame redraws a mask — and started while eighteen images
+are still being fetched and decoded it stutters. Safari feels that far more
+than Chrome does. So `gallery.js` fires a `plates:ready` event once the
+images have arrived, and the signature waits for it; a six-second cap in the
+gallery means a slow connection cannot stall it.
+
+Three things were competing with it, and all three are gone:
+
+- The field ran its animation loop behind the intro, transforming eighteen
+  elements every frame at exactly the moment the signature needed the main
+  thread. It now parks itself while `html.intro-up` is set, and the stage is
+  `visibility: hidden` so nothing is composited either.
+- Twelve plates carried `mix-blend-mode: multiply`. The page colour is baked
+  into those files instead — see below.
+- The fade out animated a `filter: blur()`, which is repainted on the main
+  thread every frame. Opacity and transform do the same job on the
+  compositor.
+
 One thing worth knowing about how it is drawn. The mark is a filled vector
 path, revealed through a mask by a stroke tracing the real centreline of the
 signature. The dash pattern that does the revealing has a gap twice the
@@ -100,12 +119,20 @@ under `PLATES_SPARE` at the bottom of the same file; move a line up into
 and pencil work.
 
 `ground: "white"` marks the pieces that were shot or scanned against a white
-sheet — the model photographs, mostly. Those, and every drawing, are
-multiplied into the page, so the sheet falls away and the work sits directly
-on the paper instead of inside a white box. A render or a dark photograph has
-a ground of its own and must not carry the flag, or the page would eat into
-the picture itself. If you add a plate, look at it on the paper colour before
-deciding.
+sheet — the model photographs, mostly. Those, and every drawing, need that
+sheet to fall away so the work sits on the paper rather than in a white box.
+
+That used to be `mix-blend-mode: multiply`, done by the browser on every
+frame. It is now baked into the files. Multiplying against a flat backdrop is
+exactly a per-channel scale by backdrop/255, so the result is identical and
+the compositor has nothing to do. `assets/bake-paper.py` is what does it —
+run it from the site root after adding a plate marked `ground: "white"`, or
+after changing `--paper`. **It is not idempotent: baking twice darkens
+twice.**
+
+A render or a dark photograph has a ground of its own and must not carry the
+flag, or the page would eat into the picture itself. If you add a plate, look
+at it on the paper colour before deciding.
 
 `w` and `h` are the real pixel dimensions of the file, and they are not
 decoration: a plate is never shown wider than `w / TUNE.grain`, so a piece

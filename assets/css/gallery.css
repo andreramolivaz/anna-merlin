@@ -2,6 +2,10 @@
    the drifting field of plates
    ========================================================= */
 
+/* While the signature is writing, the field is not drawn at all: no
+   compositing, no layout, nothing competing for the main thread. */
+html.intro-up .stage { visibility: hidden; }
+
 .stage {
   position: fixed;
   inset: 0;
@@ -39,15 +43,13 @@
   transition: opacity 380ms ease;
 }
 
-/* Anything that was scanned or shot on a white sheet — every drawing, and
-   the model photographs taken against white — is multiplied into the page,
-   so that sheet drops away and only the work is left. Marked per plate in
-   plates.js, because a render or a dark photograph has a ground of its own
-   and must keep it.
-
-   It has to sit on the element that carries the transform: a transform
-   isolates what is inside it, and the blend would have nothing to reach. */
-.plate[data-blend] { mix-blend-mode: multiply; }
+/* Nothing blends at paint time any more. Anything that stood on a white
+   sheet — every drawing, and the model photographs shot against white — has
+   the page colour baked into the file instead, which is arithmetically the
+   same result and costs the compositor nothing. Twelve blended layers were
+   what made the field expensive to draw while the signature was writing,
+   and Safari felt it far more than Chrome. Marked per plate in plates.js;
+   assets/bake-paper.py is what does it. */
 
 .plate:focus-visible { outline: 1px solid var(--ink); outline-offset: 10px; }
 
@@ -91,8 +93,6 @@
   height: auto;
   object-fit: contain;
 }
-
-.lens img[data-blend] { mix-blend-mode: multiply; }
 
 .lens figcaption {
   font-size: 12px;
