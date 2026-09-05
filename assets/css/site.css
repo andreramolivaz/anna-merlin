@@ -1,0 +1,199 @@
+/* =========================================================
+   anna merlin — shared styles
+
+   Palette: the near-white paper the plates sit on, and the
+   taupe of the mark on the portfolio cover (#A79D91),
+   deepened a little so it holds at small sizes.
+   ========================================================= */
+
+:root {
+  --paper:      #EFEEEC;   /* the page */
+  --ink:        #171614;
+  --ink-soft:   #6B6862;
+  --mark:       #887C6E;   /* anna's mark */
+  --brown:      #887C6E;   /* the mark, the intro, the writing */
+
+  /* The portfolio is set in Nirmala UI Semilight. Windows has it;
+     everywhere else Source Sans 3 Light stands in, which is the
+     closest match in metrics and colour. */
+  --font-sans: "Nirmala UI", "Source Sans 3", "Segoe UI", system-ui,
+               -apple-system, sans-serif;
+
+  /* The tabs are written out by hand when you hover them. Open fonts.html
+     to compare the candidates; to change it, edit the name here and match
+     the Google Fonts link at the top of each page. */
+  --font-hand: "Indie Flower", "Segoe Script", cursive;
+
+  --header-h: 78px;
+  --gutter:   clamp(18px, 3.4vw, 52px);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
+}
+
+body { height: 100dvh; overflow: hidden; }
+
+a { color: inherit; text-decoration: none; }
+
+::selection { background: var(--ink); color: var(--paper); }
+
+/* =========================================================
+   header
+   ========================================================= */
+
+.site-header {
+  position: fixed;
+  z-index: 40;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--gutter);
+  pointer-events: none;
+}
+
+.site-header > * { pointer-events: auto; }
+
+.mark {
+  display: block;
+  width: 38px;
+  color: var(--mark);
+  transition: color 260ms ease;
+}
+
+.mark svg { display: block; width: 100%; height: auto; }
+.mark:hover { color: var(--ink); }
+
+/* --- the tabs change hand ---------------------------------------- */
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: clamp(22px, 3.4vw, 56px);
+}
+
+.nav-item {
+  display: inline-grid;
+  align-items: center;
+  justify-items: center;
+  line-height: 1;
+  padding: 8px 2px;
+  color: var(--ink);
+}
+
+/* both hands share one grid cell, so nothing shifts on hover */
+.nav-item > span {
+  grid-area: 1 / 1;
+  white-space: nowrap;
+}
+
+/* the set type: uppercase and widely tracked. The uppercase belongs here
+   and not on the shared rule, or it would win against the writing, which
+   is lowercase the way anna signs. */
+.set {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: 13px;
+  letter-spacing: .19em;
+  text-transform: uppercase;
+  /* On the way back the set type waits for the writing to finish rubbing
+     itself out, instead of surfacing underneath it half way through. */
+  transition: opacity 170ms ease 470ms;
+}
+
+/* The word is written out from the left rather than simply appearing:
+   the same idea as the signature in the intro, at the top of the page.
+   A clip travelling left to right is what does it, so it works with a
+   typeface instead of needing every letter drawn as a path. */
+.hand {
+  font-family: var(--font-hand);
+  font-size: 19px;
+  letter-spacing: .01em;
+  color: var(--brown);
+  /* Slack above and below: the clip must only travel sideways, or it
+     shaves the tail of the j and the top of the b and the t. */
+  clip-path: inset(-40% 101% -40% 0);
+  transition: clip-path 460ms cubic-bezier(.32, .08, .3, 1);
+}
+
+.nav-item:hover .set,
+.nav-item:focus-visible .set,
+.nav-item[aria-current="page"] .set { opacity: 0; transition-delay: 0ms; }
+
+/* a hair past the edge, so the last letter is never shaved */
+.nav-item:hover .hand,
+.nav-item:focus-visible .hand,
+.nav-item[aria-current="page"] .hand { clip-path: inset(-40% -4% -40% 0); }
+
+@media (prefers-reduced-motion: reduce) {
+  .hand { transition-duration: 1ms; }
+  .set  { transition-delay: 0ms; }
+}
+
+.nav-item:focus-visible { outline: 1px solid var(--ink); outline-offset: 3px; }
+
+/* =========================================================
+   foot of the page
+   ========================================================= */
+
+.readout {
+  position: fixed;
+  z-index: 30;
+  left: var(--gutter);
+  bottom: clamp(16px, 2.4vw, 30px);
+  max-width: 44ch;
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: .04em;
+  line-height: 1.6;
+  color: var(--ink-soft);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+
+.readout.is-on { opacity: 1; }
+.readout b { font-weight: 400; color: var(--ink); }
+
+.colophon {
+  position: fixed;
+  z-index: 30;
+  right: var(--gutter);
+  bottom: clamp(16px, 2.4vw, 30px);
+  margin: 0;
+  font-size: 11px;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
+
+@media (max-width: 760px) {
+  :root { --header-h: 62px; }
+
+  .mark { width: 28px; }
+  .nav { gap: 14px; }
+  .set  { font-size: 10.5px; letter-spacing: .1em; }
+  .hand { font-size: 16px; }
+
+  .readout { max-width: 60vw; font-size: 11px; }
+  .colophon { display: none; }
+}
+
+@media (max-width: 390px) {
+  .nav { gap: 10px; }
+  .set  { font-size: 9.5px; letter-spacing: .07em; }
+  .hand { font-size: 14px; }
+}

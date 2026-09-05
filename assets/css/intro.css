@@ -1,0 +1,116 @@
+/* =========================================================
+   the signature that writes itself
+
+   This used to be a page of its own. It now sits on top of the home
+   page instead, so it plays on every load and every reload rather than
+   only when someone happens to arrive by the front door.
+
+   The pen and eraser strokes below are white and black on purpose:
+   they live inside a luminance mask, where white reveals and black
+   hides. Those are not visible colours and must not be themed — the
+   only colour that shows is --intro-ink, on the glyph.
+   ========================================================= */
+
+:root { --intro-ink: #FFFFFF; }
+
+/* held still until the signature has finished */
+html.intro-up, html.intro-up body { overflow: hidden; }
+
+.intro {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: var(--brown);
+  cursor: pointer;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  will-change: opacity, transform;
+  transition:
+    opacity 520ms cubic-bezier(.22, 1, .36, 1),
+    transform 520ms cubic-bezier(.22, 1, .36, 1),
+    filter 520ms cubic-bezier(.22, 1, .36, 1);
+}
+
+.intro:focus-visible {
+  outline: 1px solid rgba(255, 255, 255, .5);
+  outline-offset: -8px;
+}
+
+/* the signature is deliberately small, and centred */
+.signature {
+  display: block;
+  width: clamp(215px, 27vw, 310px);
+  height: auto;
+  overflow: visible;
+  shape-rendering: geometricPrecision;
+}
+
+.intro.is-leaving {
+  opacity: 0;
+  transform: scale(.985);
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.intro.is-gone { display: none; }
+
+/* the mark itself: a vector path, no raster, no external asset */
+.glyph { fill: var(--intro-ink); }
+
+/*
+  The gap in the dash pattern is twice the dash on purpose. With a gap the
+  same length as the path, the far end of the path lands exactly on the
+  boundary where the next dash begins — a dash of zero length, which a
+  round linecap still draws as a dot. That is what left two specks hanging
+  in mid-air ahead of the pen. A longer gap keeps both ends clear of any
+  boundary.
+*/
+/*
+  The strokes below are not the visible mark. They are the movement of
+  the pen, taken from the real centreline of the signature and used as a
+  mask — so the mark keeps the exact shape of the original while its
+  appearance follows one continuous piece of writing, letter after letter.
+*/
+.pen {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 14;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1200 2400;
+  stroke-dashoffset: 1200;
+}
+
+/*
+  Erasing does not rewind the white strokes: an identical black stroke
+  passes over them, walked from the tail back to the start. Where the pen
+  crosses itself — the loops, the l, the r — nothing is left glowing,
+  because the black covers for good.
+*/
+.eraser {
+  fill: none;
+  stroke: #000;
+  stroke-width: 17;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 1200 2400;
+  stroke-dashoffset: 1200;
+}
+
+.lift {
+  fill: #fff;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+@media (max-width: 600px) {
+  .signature { width: min(58vw, 240px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pen { stroke-dashoffset: 0; }
+  .lift { opacity: 1; }
+}

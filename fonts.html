@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="assets/img/favicon-32.png" sizes="32x32">
+  <link rel="apple-touch-icon" href="assets/img/apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <title>tab hand — pick one</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;500&family=Indie+Flower&family=Shantell+Sans:wght@400;500&family=Patrick+Hand&family=Gloria+Hallelujah&family=Source+Sans+3:wght@300;400&display=swap">
+  <link rel="stylesheet" href="assets/css/site.css">
+
+  <style>
+    html, body { height: auto; overflow: auto; }
+
+    body { padding: 56px var(--gutter) 90px; }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: .19em;
+      text-transform: uppercase;
+    }
+
+    .lede {
+      margin: 0 0 44px;
+      max-width: 58ch;
+      font-size: 14px;
+      line-height: 1.75;
+      color: var(--ink-soft);
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 26px;
+      align-items: center;
+      padding: 22px 0;
+      border-top: 1px solid rgba(23, 22, 20, .1);
+    }
+
+    .name { font-size: 13px; line-height: 1.5; }
+    .name code {
+      display: block;
+      margin-top: 5px;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+    }
+
+    .sample { color: var(--brown); }
+
+    .big  { font-size: 40px; line-height: 1.35; }
+    .real { font-size: 19px; margin-top: 4px; }
+    .real span { margin-right: 34px; }
+
+    .as-set {
+      color: var(--ink);
+      font-family: var(--font-sans);
+      text-transform: uppercase;
+      letter-spacing: .19em;
+      font-weight: 400;
+    }
+    .as-set.big  { font-size: 26px; letter-spacing: .16em; }
+    .as-set.real { font-size: 13px; }
+  </style>
+</head>
+
+<body>
+  <h1>tab hand</h1>
+  <p class="lede">
+    The tabs sit in Nirmala UI, uppercase, and change into a second hand when
+    you hover one. Each row below is a candidate for that second hand: large
+    first, then at the size it actually appears in the header. Tell me which
+    row, or change <code>--font-hand</code> in assets/css/site.css yourself and
+    match the name in the Google Fonts link at the top of each page.
+  </p>
+
+  <div class="row">
+    <p class="name">Caveat<code>thin, joined, closest to the signature</code></p>
+    <div>
+      <div class="sample big"  style="font-family:'Caveat'">home &nbsp; projects &nbsp; about me</div>
+      <div class="sample real" style="font-family:'Caveat'"><span>home</span><span>projects</span><span>about me</span></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <p class="name">Indie Flower<code>upright and round, like her letterforms</code></p>
+    <div>
+      <div class="sample big"  style="font-family:'Indie Flower'">home &nbsp; projects &nbsp; about me</div>
+      <div class="sample real" style="font-family:'Indie Flower'"><span>home</span><span>projects</span><span>about me</span></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <p class="name">Shantell Sans<code>marker, the most extravagant</code></p>
+    <div>
+      <div class="sample big"  style="font-family:'Shantell Sans'">home &nbsp; projects &nbsp; about me</div>
+      <div class="sample real" style="font-family:'Shantell Sans'"><span>home</span><span>projects</span><span>about me</span></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <p class="name">Patrick Hand<code>calm, the quietest of the four</code></p>
+    <div>
+      <div class="sample big"  style="font-family:'Patrick Hand'">home &nbsp; projects &nbsp; about me</div>
+      <div class="sample real" style="font-family:'Patrick Hand'"><span>home</span><span>projects</span><span>about me</span></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <p class="name">Gloria Hallelujah<code>looser, more written</code></p>
+    <div>
+      <div class="sample big"  style="font-family:'Gloria Hallelujah'">home &nbsp; projects &nbsp; about me</div>
+      <div class="sample real" style="font-family:'Gloria Hallelujah'"><span>home</span><span>projects</span><span>about me</span></div>
+    </div>
+  </div>
+
+  <div class="row">
+    <p class="name">no second hand<code>the tabs only change colour</code></p>
+    <div>
+      <div class="sample big as-set">home &nbsp; projects &nbsp; about me</div>
+      <div class="sample real as-set"><span>home</span><span>projects</span><span>about me</span></div>
+    </div>
+  </div>
+</body>
+</html>
