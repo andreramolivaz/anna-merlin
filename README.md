@@ -27,14 +27,23 @@ when someone arrived by the front door — reload the gallery and you never
 saw it. It now sits on top of the home page as an overlay, so it plays on
 every load and every reload. Click or tap skips it.
 
-It waits for the plates before it starts. The writing is a main-thread
-animation — every frame redraws a mask — and started while eighteen images
-are still being fetched and decoded it stutters. Safari feels that far more
-than Chrome does. So `gallery.js` fires a `plates:ready` event once the
-images have arrived, and the signature waits for it; a six-second cap in the
-gallery means a slow connection cannot stall it.
+The writing is a main-thread animation — every frame redraws a mask — so
+what it needs is an idle page. It gets one by ordering, not by waiting.
 
-Three things were competing with it, and all three are gone:
+The order is: the pen goes down about 200ms in, on a page that has fetched
+nothing but its own stylesheet. When the last letter is finished, `intro.js`
+fires `intro:written` and only then does the field ask for its images. The
+holding, the erasing and the fade cover that wait, so nothing is competing
+with the writing and nothing is competing with the reader either. Tapping to
+skip fires the same event, so the field is never left waiting for a cue three
+seconds away.
+
+An earlier attempt had this backwards — the signature waited for the images
+instead. On a phone that meant several seconds of blank brown, and then the
+writing ran anyway while the rest of the download was still arriving. Both
+symptoms, one mistake.
+
+Three other things were competing with it, and all three are gone:
 
 - The field ran its animation loop behind the intro, transforming eighteen
   elements every frame at exactly the moment the signature needed the main
@@ -45,6 +54,12 @@ Three things were competing with it, and all three are gone:
 - The fade out animated a `filter: blur()`, which is repainted on the main
   thread every frame. Opacity and transform do the same job on the
   compositor.
+
+Payload matters too, and a phone was being sent the desktop pictures. Each
+plate now has a `-sm.jpg` beside it at 720 pixels, offered through `srcset`;
+`assets/make-small.py` writes them. A phone takes 1.16 MB where it used to
+take 2.48, and a retina desktop still gets the large files. Run that script
+after adding a plate, or its small copy will be missing.
 
 One thing worth knowing about how it is drawn. The mark is a filled vector
 path, revealed through a mask by a stroke tracing the real centreline of the

@@ -76,6 +76,12 @@
       cursor += duration + (CONFIG.penLift[index] || 0);
     });
 
+    /* The last letter is down. The field can start fetching now: the hold,
+       the erasing and the fade cover the wait, and none of it competes with
+       the writing itself. */
+    window.setTimeout(() => document.dispatchEvent(new Event("intro:written")),
+                      cursor);
+
     /* The dot of the i and the full stop: the only real pen lifts. */
     const iDotIn = cursor + 30;
     const finalDotIn = iDotIn + 130;
@@ -113,6 +119,9 @@
   function leave(delay = CONFIG.fadeMs) {
     if (leaving) return;
     leaving = true;
+    /* skipped by a tap: the field should not sit there waiting for a cue
+       that is now three seconds away. The listener only fires once. */
+    document.dispatchEvent(new Event("intro:written"));
     /* the field starts moving as the ground fades, not after it */
     document.documentElement.classList.remove("intro-up");
     intro.classList.add("is-leaving");
@@ -124,6 +133,7 @@
     started = true;
 
     if (reducedMotion) {
+      document.dispatchEvent(new Event("intro:written"));
       penPaths.forEach((path) => {
         path.style.strokeDasharray = "none";
         path.style.strokeDashoffset = 0;
@@ -145,18 +155,9 @@
       return;
     }
 
-    /* The writing is a main-thread animation: every frame redraws a mask.
-       Started while the plates are still being fetched and decoded it
-       stutters, and Safari suffers far more than Chrome. So it waits for
-       the field to report itself ready, and only then picks up the pen.
-       The gallery caps that wait, so a slow connection cannot stall it. */
-    if (window.PLATES && !document.body.classList.contains("plates-ready")) {
-      document.addEventListener("plates:ready", () => {
-        window.setTimeout(start, 260);
-      }, { once: true });
-      return;
-    }
-
+    /* No waiting for anything. The writing is a main-thread animation —
+       every frame redraws a mask — so what it needs is an idle page, and it
+       has one: the field holds its images back until the pen is down. */
     window.setTimeout(start, 200);
   }
 

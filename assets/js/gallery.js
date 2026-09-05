@@ -126,11 +126,23 @@
       }
 
       const img = document.createElement("img");
-      img.src = item.src;
+      /* Two sizes on offer, and the browser picks. A phone draws a plate
+         about 240 css pixels wide, so even at three device pixels each it
+         wants the 720 — a fifth of the area the desktop needs. Serving the
+         large one to a phone cost several seconds on a mobile connection,
+         and the signature was left waiting for it. */
+      const small = item.src.replace(".jpg", "-sm.jpg");
+      /* Held back, not loaded. The signature writes on an idle page and the
+         plates start arriving once the pen is down — see the bottom of the
+         file. Sources sit in data- until then. */
+      img.dataset.src = small;
+      img.dataset.srcset = `${small} 720w, ${item.src} ${item.w}w`;
+      img.sizes = "(max-width: 760px) 46vw, min(26vw, 380px)";
       img.alt = "";
       img.width = item.w;
       img.height = item.h;
       img.decoding = "async";
+      img.fetchPriority = "low";   /* never ahead of the stylesheet or the intro */
       img.draggable = false;
       el.appendChild(img);
 
@@ -392,30 +404,42 @@
     settle = setTimeout(layout, 180);
   });
 
-  /* Hold until the plates have actually arrived, then say so out loud: the
-     signature listens for this and waits, so it writes on a quiet page
-     rather than against eighteen images still being fetched and decoded. */
+  /* Fetching the plates is what used to make the signature stutter, and
+     waiting for them first is what left the screen brown for seconds. So
+     neither: the writing starts at once on an idle page, and the plates are
+     asked for only once the pen has finished the last letter. The holding,
+     erasing and fading that follow cover the wait. */
   const imgs = [...stage.querySelectorAll("img")];
   let left = imgs.length;
-  let announced = false;
+  let fetching = false;
+  let shown = false;
 
-  function ready() {
-    if (announced) return;
-    announced = true;
+  function reveal() {
+    if (shown) return;
+    shown = true;
     stage.classList.add("is-ready");
-    document.dispatchEvent(new Event("plates:ready"));
   }
 
-  if (!left) ready();
-  imgs.forEach((img) => {
-    const tick = () => { if (--left <= 0) ready(); };
-    if (img.complete) tick();
-    else {
+  function fetchPlates() {
+    if (fetching) return;
+    fetching = true;
+    if (!left) return reveal();
+    imgs.forEach((img) => {
+      const tick = () => { if (--left <= 0) reveal(); };
       img.addEventListener("load", tick, { once: true });
       img.addEventListener("error", tick, { once: true });
-    }
-  });
+      img.srcset = img.dataset.srcset;
+      img.src = img.dataset.src;
+    });
+    /* however slow the line, the field does not stay invisible forever */
+    setTimeout(reveal, 8000);
+  }
 
-  /* a slow connection must not hold the signature hostage */
-  setTimeout(ready, 6000);
+  document.addEventListener("intro:written", fetchPlates, { once: true });
+
+  /* no intro on this page, or it has already been and gone */
+  if (!document.getElementById("intro") ||
+      !document.documentElement.classList.contains("intro-up")) {
+    fetchPlates();
+  }
 })();
