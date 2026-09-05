@@ -226,19 +226,6 @@ The numbers to turn are in `TUNE`, at the top:
 
 Want it busier? Lower `tile`. Want more empty space? Raise it.
 
-## The full view
-
-Laid out as a flex column that is told to fit, rather than a picture given a
-height worked out by hand. The image is allowed to shrink — `min-height: 0`
-is what permits that inside a flex column — and the caption keeps its own
-row, so it cannot be pushed off the bottom of a phone. The padding leaves
-room for the close button and for `env(safe-area-inset-*)`.
-
-The natural width of a plate reaches the image as a custom property, not as
-an inline `max-width`. An inline `max-width` beats the stylesheet, and a
-1200px plate then runs off the side of a 390px phone — which is exactly what
-it was doing.
-
 ## What responds to what
 
 Pointer toward an edge and the field drifts the other way. Drag, with a
