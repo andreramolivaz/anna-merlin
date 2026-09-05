@@ -342,8 +342,10 @@
     const p = plates[i];
     lensImg.src = p.item.src;
     lensImg.alt = `${p.item.title} — ${p.item.project}`;
-    /* the same courtesy in full view: never shown wider than it really is */
-    lensImg.style.maxWidth = Math.min(p.item.w, 1200) + "px";
+    /* the same courtesy in full view: never shown wider than it really is.
+       As a custom property, so the stylesheet can still cap it to the
+       viewport — an inline max-width would win and overflow a phone. */
+    lensImg.style.setProperty("--natural", Math.min(p.item.w, 1200) + "px");
     lensImg.dataset.kind = p.item.kind;
     lensCap.innerHTML = caption(p.item);
     lens.classList.add("is-open");

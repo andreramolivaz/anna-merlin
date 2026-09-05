@@ -26,12 +26,6 @@
     document.querySelector(".pen-n")
   ];
 
-  const erasers = [
-    document.querySelector(".eraser-n"),
-    document.querySelector(".eraser-merli"),
-    document.querySelector(".eraser-anna")
-  ];
-
   const iDot = document.querySelector(".i-dot");
   const finalDot = document.querySelector(".final-dot");
 
@@ -93,19 +87,15 @@
     dot(iDot, t + 60, false);
     t += 190;
 
-    /* Rewound in true reverse order: n, merli, anna. The white strokes
-       stay where they are; what moves is a black eraser tracing back
-       over them from the tail, so nothing is left glowing. */
-    erasers.forEach((path) => {
-      const length = path.getTotalLength();
-      path.style.strokeDasharray = length + " " + length * 2;
-      path.style.strokeDashoffset = length;
-
+    /* Rewound in true reverse order: n, merli, anna. There is no separate
+       eraser any more — the same dash offset simply runs the other way, and
+       the stroke retreats from its tail back towards where it started. */
+    strokes.slice().reverse().forEach(({ path, length }) => {
       const duration = Math.max(160, (length / CONFIG.eraseSpeed) * 1000);
 
       path.animate([
-        { strokeDashoffset: length },
-        { strokeDashoffset: 0 }
+        { strokeDashoffset: 0 },
+        { strokeDashoffset: length }
       ], { duration, delay: t, easing: "linear", fill: "forwards" });
 
       t += duration + 40;

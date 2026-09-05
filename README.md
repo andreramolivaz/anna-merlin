@@ -61,13 +61,34 @@ plate now has a `-sm.jpg` beside it at 720 pixels, offered through `srcset`;
 take 2.48, and a retina desktop still gets the large files. Run that script
 after adding a plate, or its small copy will be missing.
 
-One thing worth knowing about how it is drawn. The mark is a filled vector
-path, revealed through a mask by a stroke tracing the real centreline of the
-signature. The dash pattern that does the revealing has a gap twice the
-length of the dash, and that is not arbitrary: with an equal gap, the far end
-of each path lands exactly where the next dash begins, and a round linecap
-draws that zero-length dash as a dot. It left two white specks hanging ahead
-of the pen. If you ever touch `stroke-dasharray`, keep the gap long.
+### How it is drawn, and why it is drawn that way
+
+It is the centreline of the real signature, stroked directly. Six units
+wide, which is the thickness measured off the original filled mark — its
+area divided by the length of its centreline.
+
+It began as the filled outline of the mark, revealed through an svg mask
+that the pen strokes drew into. That is faithful, and it is expensive: every
+frame the browser rebuilds a mask buffer and recomposites a masked shape.
+Chrome absorbed it; Safari and phones did not. Since the hand is monoline,
+stroking the centreline gives the same letterforms for a fraction of the
+work — and it took the page from 39 KB to 11 KB, mask, outline and eraser
+paths all gone at once.
+
+Two smaller things in the same direction. The polylines were thinned from
+728 points to 213, a third of a unit of tolerance on a 575-unit line, which
+is 71% less geometry to re-dash on every frame. And `shape-rendering:
+geometricPrecision` came off the svg: it turns off the renderer's own
+shortcuts for a fidelity nobody can see on a line this thin.
+
+Erasing is no longer a second black stroke passing over the first. The same
+dash offset simply runs the other way and the stroke retreats from its tail.
+
+One trap: the gap in the dash pattern is twice the dash, and that is not
+arbitrary. With an equal gap the far end of each path lands exactly where the
+next dash begins — a dash of zero length, which a round linecap still draws
+as a dot. It once left two white specks hanging in mid-air ahead of the pen.
+If you touch `stroke-dasharray`, keep the gap long.
 
 ## Colour
 
@@ -204,6 +225,19 @@ The numbers to turn are in `TUNE`, at the top:
     tall      cap on a plate's height, as a multiple of its width
 
 Want it busier? Lower `tile`. Want more empty space? Raise it.
+
+## The full view
+
+Laid out as a flex column that is told to fit, rather than a picture given a
+height worked out by hand. The image is allowed to shrink — `min-height: 0`
+is what permits that inside a flex column — and the caption keeps its own
+row, so it cannot be pushed off the bottom of a phone. The padding leaves
+room for the close button and for `env(safe-area-inset-*)`.
+
+The natural width of a plate reaches the image as a custom property, not as
+an inline `max-width`. An inline `max-width` beats the stylesheet, and a
+1200px plate then runs off the side of a 390px phone — which is exactly what
+it was doing.
 
 ## What responds to what
 
