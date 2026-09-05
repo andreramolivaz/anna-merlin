@@ -123,6 +123,24 @@ it, and you can delete it once you have decided.
 
 Both hands sit in the same grid cell, so nothing shifts when they swap.
 
+## If it stutters on a host but not on your laptop
+
+Locally everything is already on the disk, so nothing competes with the
+signature and it always looks smooth. Over a real connection the same page
+has work arriving while the pen is moving, and the writing is a main-thread
+animation — every frame redraws a mask. Safari feels that far more than
+Chrome does.
+
+So nothing at all is fetched while it writes. The plates keep their sources
+in `data-src` until `intro:written` fires, and the web fonts are injected on
+the same event. Measured from a cold load: zero image requests and zero font
+requests before the pen goes down, all eighteen plates and the fonts
+immediately after. The hold, the erasing and the fade cover the wait.
+
+`.nojekyll` sits in the root because GitHub Pages otherwise runs the repo
+through Jekyll.
+
+
 ## The plates
 
 Eighteen of them, listed in `assets/js/plates.js` — one line each, with

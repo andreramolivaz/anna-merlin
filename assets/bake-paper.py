@@ -49,8 +49,14 @@ rows = re.findall(
     r'src: "assets/img/([\w-]+)\.jpg",.*?kind: "(\w+)",(\s+ground: "white",)?',
     open("assets/js/plates.js", encoding="utf-8").read())
 
+paths = []
 for slug in sorted({s for s, kind, ground in rows if kind == "draw" or ground}):
-    path = f"assets/img/{slug}.jpg"
+    # both sizes: a phone is served the -sm file, and a sheet left uncorrected
+    # there shows as a box on exactly the screens hardest to check
+    paths += [f"assets/img/{slug}.jpg", f"assets/img/{slug}-sm.jpg"]
+
+for path in paths:
+    slug = os.path.basename(path)[:-4]
     if not os.path.exists(path):
         continue
 

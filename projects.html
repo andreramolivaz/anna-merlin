@@ -17,8 +17,11 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet"
+  <!-- non-blocking: the page paints in the fallback face and swaps when
+       the web fonts land, rather than holding the first paint for them -->
+  <link rel="stylesheet" media="print" onload="this.media='all'"
         href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Source+Sans+3:wght@300;400&display=swap">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Indie+Flower&family=Source+Sans+3:wght@300;400&display=swap"></noscript>
 
   <link rel="stylesheet" href="assets/css/site.css">
   <link rel="stylesheet" href="assets/css/hold.css">
