@@ -61,28 +61,21 @@ plate now has a `-sm.jpg` beside it at 720 pixels, offered through `srcset`;
 take 2.48, and a retina desktop still gets the large files. Run that script
 after adding a plate, or its small copy will be missing.
 
-### How it is drawn, and why it is drawn that way
+### How it is drawn, and one thing not to try again
 
-It is the centreline of the real signature, stroked directly. Six units
-wide, which is the thickness measured off the original filled mark — its
-area divided by the length of its centreline.
+The mark is a filled vector path — the true outline of her signature —
+revealed through an svg mask by a stroke that traces the real centreline.
 
-It began as the filled outline of the mark, revealed through an svg mask
-that the pen strokes drew into. That is faithful, and it is expensive: every
-frame the browser rebuilds a mask buffer and recomposites a masked shape.
-Chrome absorbed it; Safari and phones did not. Since the hand is monoline,
-stroking the centreline gives the same letterforms for a fraction of the
-work — and it took the page from 39 KB to 11 KB, mask, outline and eraser
-paths all gone at once.
-
-Two smaller things in the same direction. The polylines were thinned from
-728 points to 213, a third of a unit of tolerance on a 575-unit line, which
-is 71% less geometry to re-dash on every frame. And `shape-rendering:
-geometricPrecision` came off the svg: it turns off the renderer's own
-shortcuts for a fidelity nobody can see on a line this thin.
-
-Erasing is no longer a second black stroke passing over the first. The same
-dash offset simply runs the other way and the stroke retreats from its tail.
+I once replaced all that with the centreline stroked directly. It is far
+cheaper: no mask buffer to rebuild each frame, and it took the page from
+39 KB to 11 KB. It is also wrong, and the way it is wrong is worth writing
+down. Her hand tapers — thin through the joins and the l and the i, full in
+the loops — and a stroke of one width thickens exactly the parts that should
+be light. I had calibrated the width by dividing the mark's area by the
+length of its centreline, which gives 5.96 and looks right on a laptop at
+310px. At 226px on a phone it read as heavy and blunt. The measurement was
+not wrong; it was answering the wrong question, because an average cannot
+carry a taper. The faithful version is back.
 
 One trap: the gap in the dash pattern is twice the dash, and that is not
 arbitrary. With an equal gap the far end of each path lands exactly where the
@@ -157,6 +150,11 @@ in `data-src` until `intro:written` fires, and the web fonts are injected on
 the same event. Measured from a cold load: zero image requests and zero font
 requests before the pen goes down, all eighteen plates and the fonts
 immediately after. The hold, the erasing and the fade cover the wait.
+
+A narrow screen builds twelve plates rather than eighteen. Each one is a
+composited layer the phone holds in graphics memory while the field drifts;
+eighteen is nothing on a laptop and a real weight on a phone. Twelve is still
+more than fit on screen at once, so the field looks no emptier.
 
 `.nojekyll` sits in the root because GitHub Pages otherwise runs the repo
 through Jekyll.
